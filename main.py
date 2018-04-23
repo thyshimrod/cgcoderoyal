@@ -34,17 +34,26 @@ class Site:
                     distance = d
                     site = Site.listOfSite[i]
         return site
+        
     @staticmethod
-    def foundNearestBarracksFromQueen(queen):
+    def foundNearestSiteFromQueen(_type,queen):
         distance = -1
         site = None
         for i in Site.listOfSite:
-            if Site.listOfSite[i].owner == 0:
+            if Site.listOfSite[i].owner == 0 and Site.listOfSite[i].structureType == _type:
                 d = calcDistance(queen, Site.listOfSite[i])
                 if distance == -1 or distance > d:
                     distance = d
                     site = Site.listOfSite[i]
         return site
+        
+    @staticmethod
+    def getNumberBuildingsPerType(_type):
+        nb = 0
+        for i in Site.listOfSite:
+            if Site.listOfSite[i].structureType == _type:
+                nb+=1
+        return nb
         
 class Queen:
     def __init__(self):
@@ -105,7 +114,13 @@ while True:
     barracks = ""
     site = Site.foundNearestFreeSite(queen)        
     if site is not None:
-        print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
+        if Site.getNumberBuildingsPerType(2) <3 :
+            print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
+        elif Site.getNumberBuildingsPerType(1) < 3:
+            print("BUILD " + str(site.id) + " TOWER")
+        else:
+            site = Site.foundNearestSiteFromQueen(1,queen)
+            print("MOVE " + str(site.x) + " " + str(site.y))
     else:
         print("WAIT")
     
