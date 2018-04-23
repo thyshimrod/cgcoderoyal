@@ -17,6 +17,7 @@ class Site:
         self.id = 0
         self.owner = 0
         self.structureType = 0
+        self.archer = False
         self.turnRemaining = 0
         self.typeBuilding = 0
         self.x = 0
@@ -28,11 +29,18 @@ class Site:
         distance = -1
         site = None
         for i in Site.listOfSite:
-            if Site.listOfSite[i].owner != 0:
+            if Site.listOfSite[i].owner == -1:
                 d = calcDistance(queen, Site.listOfSite[i])
                 if distance == -1 or distance > d:
                     distance = d
                     site = Site.listOfSite[i]
+        if site is None:
+            for i in Site.listOfSite:
+                if Site.listOfSite[i].owner == 1:
+                    d = calcDistance(queen, Site.listOfSite[i])
+                    if distance == -1 or distance > d:
+                        distance = d
+                        site = Site.listOfSite[i]
         return site
         
     @staticmethod
@@ -64,6 +72,11 @@ class Queen:
         
 queen = Queen()
 queenEnnemy = Queen()
+
+alternate = 0
+knight = 1
+nbFromBuilding = -1
+archer = False
 
 num_sites = int(input())
 for i in range(num_sites):
@@ -112,15 +125,60 @@ while True:
     # Write an action using print
     # To debug: print("Debug messages...", file=sys.stderr)
     barracks = ""
+    action = False
     site = Site.foundNearestFreeSite(queen)        
     if site is not None:
-        if Site.getNumberBuildingsPerType(2) <3 :
-            print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
-        elif Site.getNumberBuildingsPerType(1) < 3:
-            print("BUILD " + str(site.id) + " TOWER")
-        else:
-            site = Site.foundNearestSiteFromQueen(1,queen)
-            print("MOVE " + str(site.x) + " " + str(site.y))
+    #    if Site.getNumberBuildingsPerType(0) <1 :
+        #    print("BUILD " + str(site.id) + " MINE")
+        #elif Site.getNumberBuildingsPerType(2) <1 :
+        #    print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
+        #elif Site.getNumberBuildingsPerType(1) < 1:
+        #    print("BUILD " + str(site.id) + " TOWER")
+        #elif Site.getNumberBuildingsPerType(0) <2 :
+        #    print("BUILD " + str(site.id) + " MINE")
+        #elif Site.getNumberBuildingsPerType(2) <2 :
+        #    print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
+        #elif Site.getNumberBuildingsPerType(1) < 4:
+        #    print("BUILD " + str(site.id) + " TOWER")
+        #else:
+        #    site = Site.foundNearestSiteFromQueen(1,queen)
+        #    if site is not None:
+        #        print("MOVE " + str(site.x) + " " + str(site.y))
+        #    else :
+        #        print ("WAIT")
+        print(str(alternate) + "//" + str( nbFromBuilding),file=sys.stderr)
+        if alternate == 0:
+            if nbFromBuilding == -1 or nbFromBuilding == Site.getNumberBuildingsPerType(0):
+                print("BUILD " + str(site.id) + " MINE")
+                nbFromBuilding = Site.getNumberBuildingsPerType(0)
+                action = True
+            else:
+                nbFromBuilding = -1
+                alternate +=1
+        if alternate == 1:
+            if (nbFromBuilding == -1 or nbFromBuilding == Site.getNumberBuildingsPerType(2)) and  Site.getNumberBuildingsPerType(2) <2:
+                if knight == 0:
+                    print("BUILD " + str(site.id) + " BARRACKS-ARCHER")
+                    site.archer = True
+                else: 
+                    print("BUILD " + str(site.id) + " BARRACKS-KNIGHT")
+                nbFromBuilding = Site.getNumberBuildingsPerType(2)
+                action = True
+            else:
+                nbFromBuilding = -1
+                alternate +=1
+                knight = 1
+        if alternate == 2:
+            if nbFromBuilding == -1 or nbFromBuilding == Site.getNumberBuildingsPerType(1):
+                print("BUILD " + str(site.id) + " TOWER")
+                nbFromBuilding = Site.getNumberBuildingsPerType(1)
+                action = True
+            else:
+                nbFromBuilding = -1
+                alternate +=1
+                alternate %= 3
+        if action == False:
+            print("WAIT")
     else:
         print("WAIT")
     
@@ -128,7 +186,11 @@ while True:
     for i in Site.listOfSite:
         if nbBarracks <=0 :
             break
-        if Site.listOfSite[i].owner ==0 and Site.listOfSite[i].turnRemaining ==0:
+        if Site.listOfSite[i].owner ==0 and Site.listOfSite[i].turnRemaining ==0 and archer:
+            barracks += " " + str(i)
+            nbBarracks -= 1
+            archer = False
+        elif Site.listOfSite[i].owner ==0 and Site.listOfSite[i].turnRemaining ==0 and not archer:
             barracks += " " + str(i)
             nbBarracks -= 1
             
@@ -137,3 +199,4 @@ while True:
     # Second line: A set of training instructions
     
     print("TRAIN" + barracks)
+    
