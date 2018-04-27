@@ -40,18 +40,20 @@ class Site:
         self.gold = 0
         self.radius = 0
         self.rank = 0
+        self.portee = 0
 
     @staticmethod
     def found_nearest_free_site(queen):
         distance = -1
         site = None
         for i in Site.list_of_site:
-            if Site.list_of_site[
-                i].owner == -1:  # or (Site.list_of_site[i].structure_type == 0 and Site.list_of_site[i].rank<2):
-                d = calc_distance(queen, Site.list_of_site[i])
-                if distance == -1 or distance > d:
-                    distance = d
-                    site = Site.list_of_site[i]
+            if Site.list_of_site[i].owner == -1:  # or (Site.list_of_site[i].structure_type == 0 and Site.list_of_site[i].rank<2):
+                if (queen.left and Site.list_of_site[i].x < 1000) or (not queen.left and Site.list_of_site[i].x > 900):
+                    d = calc_distance(queen, Site.list_of_site[i])
+                    if distance == -1 or distance > d:
+                        distance = d
+                        site = Site.list_of_site[i]
+        """
         if site is None:
             for i in Site.list_of_site:
                 if Site.list_of_site[i].owner == 1:
@@ -59,6 +61,7 @@ class Site:
                     if distance == -1 or distance > d:
                         distance = d
                         site = Site.list_of_site[i]
+        """
         return site
 
     @staticmethod
@@ -88,8 +91,9 @@ class Queen:
     def __init__(self):
         self.health = 0
         self.gold = 0
-        self.x = 0
-        self.y = 0
+        self.x = -1
+        self.y = -1
+        self.left = False
 
 
 Queen.list_of_queen[0] = Queen()
@@ -115,7 +119,7 @@ class GameState:
                     if distance < 50:
                         break
 
-        if distance < 50 and distance != -1:
+        if distance < 100 and distance != -1:
             print("HERE ", file=sys.stderr)
             self.action = 1
             return self.build_tower()
@@ -173,10 +177,11 @@ class GameState:
         return True
 
     def build_tower(self):
-        print("JJJ ", file=sys.stderr)
         if self.target is None:
             self.target = Site.found_nearest_free_site(Queen.list_of_queen[0])
         if self.target.owner == -1:
+            print("BUILD " + str(self.target.id) + " TOWER")
+        elif self.target.portee < 300:
             print("BUILD " + str(self.target.id) + " TOWER")
         else:
             self.target = None
@@ -230,6 +235,9 @@ while True:
             temp.rank = param_1
         else:
             temp.turn_remaining = param_1
+        if structure_type == 1:
+            temp.portee = param_2
+            print("PORTEE " + str(param_2),file = sys.stderr)
         temp.type_army = param_2
         temp.max_mine_size = max_mine_size
         temp.gold = gold
@@ -240,9 +248,15 @@ while True:
         # unit_type: -1 = QUEEN, 0 = KNIGHT, 1 = ARCHER
         x, y, owner, unit_type, health = [int(j) for j in input().split()]
         if unit_type == -1:
+            if Queen.list_of_queen[owner].x == -1:
+                if x < 1000:
+                    Queen.list_of_queen[owner].left = True
+                else:
+                    Queen.list_of_queen[owner].left = False
             Queen.list_of_queen[owner].x = x
             Queen.list_of_queen[owner].y = y
             Queen.list_of_queen[owner].health = health
+
         else:
             temp = Unit()
             temp.x = x
