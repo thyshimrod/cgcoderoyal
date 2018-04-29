@@ -26,7 +26,6 @@ class Unit:
 # the standard input according to the problem statement.
 class Site:
     list_of_site = {}
-    lisf_of_distance = {}
 
     def __init__(self):
         self.id = 0
@@ -37,35 +36,11 @@ class Site:
         self.type_building = 0
         self.x = 0
         self.y = 0
-        self.max_mine_size = 0
+        self.max_mineSize = 0
         self.gold = 0
         self.radius = 0
         self.rank = 0
         self.portee = 0
-        self.distance = 0
-
-    @staticmethod
-    def calcDistanceSite():
-        Site.lisf_of_distance={}
-        for i in Site.list_of_site:
-            if Site.list_of_site[i].owner == -1:
-                dist = calc_distance(Site.list_of_site[i],Queen.list_of_queen[0])
-                Site.lisf_of_distance[dist] = Site.list_of_site[i];
-            
-    @staticmethod
-    def findBestMineSite():
-        Site.calcDistanceSite()
-        dists = list(Site.lisf_of_distance.keys())
-        print(dists,file=sys.stderr)
-        dists.sort(reverse=True)
-        for d in dists:
-            print(" dd  " + str(Site.lisf_of_distance[d].max_mine_size) + "//" + str(d),file=sys.stderr)
-            if Site.lisf_of_distance[d].max_mine_size >= 3:
-                return Site.lisf_of_distance[d]
-                
-        return None
-            
-        
 
     @staticmethod
     def found_nearest_free_site(queen):
@@ -73,11 +48,11 @@ class Site:
         site = None
         for i in Site.list_of_site:
             if Site.list_of_site[i].owner == -1:  # or (Site.list_of_site[i].structure_type == 0 and Site.list_of_site[i].rank<2):
-                #if (queen.left and Site.list_of_site[i].x < 1200) or (not queen.left and Site.list_of_site[i].x > 800): 
-                d = calc_distance(queen, Site.list_of_site[i])
-                if distance == -1 or distance > d:
-                    distance = d
-                    site = Site.list_of_site[i]
+                if (queen.left and Site.list_of_site[i].x < 1200) or (not queen.left and Site.list_of_site[i].x > 800): 
+                    d = calc_distance(queen, Site.list_of_site[i])
+                    if distance == -1 or distance > d:
+                        distance = d
+                        site = Site.list_of_site[i]
         """
         if site is None:
             for i in Site.list_of_site:
@@ -106,7 +81,11 @@ class Site:
         nb = 0
         for i in Site.list_of_site:
             if Site.list_of_site[i].owner == _owner and Site.list_of_site[i].structure_type == _type:
-                nb += 1
+                if _type == 2:
+                    if Site.list_of_site[i].type_army == 0:
+                        nb += 1
+                else:
+                    nb += 1
         return nb
     
     @staticmethod
@@ -141,43 +120,44 @@ class GameState:
         self.target = None
         self.action = 0  # build Mine
         self.giant = False
+        self.distance = -1
+        self.id_near = 0
 
     def take_decision(self):
         nb_barracks = Site.get_number_buildings_per_type(2)
         nb_tower = Site.get_number_buildings_per_type(1)
         nb_tower_ennemy = Site.get_number_buildings_per_type(1,1)
         nb_mine = Site.get_number_buildings_per_type(0)
-        distance = -1
+        self.distance = -1
         for u in Unit.list_of_unit:
             if u.owner == 1:
                 dist = calc_distance(Queen.list_of_queen[0], u)
-                if distance == -1 or distance > dist:
-                    distance = dist
-                    if distance < 80:
+                if self.distance == -1 or self.distance > dist:
+                    self.distance = dist
+                    if self.distance < 80:
                         break
 
-        #print("nb_tower_ennemy" + str(nb_tower_ennemy) + "//" + str( 
-        #if nb_tower == 4 and self.target is None:
-        #    self.action = 4
-        #    return self.move_to_tower()
-        if nb_tower_ennemy > 3 and  Site.has_giant_barracks() is None:
-            self.action = 3
-            return self.build_giant()
-        elif distance < 100 and distance != -1 and nb_tower < 4:
+        #print("nb_tower_ennemy" + str(nb_tower_ennemy) + "//" + str(        
+        #if nb_tower_ennemy > 4 and  Site.has_giant_barracks() is None and nb_barracks > 0:
+        #    self.action = 3
+        #    return self.build_giant()
+        if self.distance < 100 and self.distance != -1 and nb_tower < 4:
             self.action = 1
             return self.build_tower()
         elif self.target is None:
-            
             if nb_mine>4 and nb_barracks<2:
                 self.action = 2
                 return self.build_barracks()
-            if nb_mine < 2:
+            if nb_mine < 3:
                 self.action = 0
                 return self.build_mine()
+            elif nb_barracks < 1:
+                self.action = 2
+                return self.build_barracks()
             elif nb_tower < 1:
                 self.action = 1
                 return self.build_tower()
-            elif nb_barracks < 1:
+            elif nb_barracks < 2:
                 self.action = 2
                 return self.build_barracks()
             elif nb_tower == nb_barracks:
@@ -187,14 +167,12 @@ class GameState:
                 self.action = 0
                 return self.build_mine()
             elif nb_mine <= nb_tower:
-                print("HERE 5",file=sys.stderr)
                 self.action = 0
                 return self.build_mine()
             elif nb_tower < nb_mine:
                 self.action = 1
                 return self.build_tower()
             else:
-                print("HERE ",file=sys.stderr)
                 print("WAIT")
                 return true
 
@@ -208,37 +186,26 @@ class GameState:
                 return self.build_barracks()
             elif self.action == 3:
                 return self.build_giant()
-            elif self.action == 4:
-                return self.move_to_tower()
             else:
-                print("HERE 2",file=sys.stderr)
                 print("WAIT")
                 return False
                 #else:
                  #   self.target = None
                  #   return False
-        print("HERE 3",file=sys.stderr)
         print("WAIT")
         return True
 
     def run(self):
         action_done = False
         i = 0
-        while not action_done and i < 5:
+        while not action_done and i < 3:
             action_done = self.take_decision()
             i+=1
             
         if not action_done:
-            print("HERE 4",file=sys.stderr)
             print("WAIT")
             
         self.train()
-    
-    def move_to_tower(self):
-        if self.target is None:
-            self.target = Site.found_nearest_site_from_queen(0,Queen.list_of_queen[0])
-        print("MOVE " + str(self.target.x) + " " + str(self.target.y))
-        return True
     
     def train(self):
         print ("TOOT " + str(Site.has_giant_barracks()) + "//" + str(self.giant),file=sys.stderr)
@@ -249,6 +216,16 @@ class GameState:
             else:
                 print("TRAIN")
         else:
+            nb_barracks = Site.get_number_buildings_per_type(2)
+            barracks = ""
+            if nb_barracks > 0:
+                nb_gold = Queen.list_of_queen[0].gold - (80*nb_barracks)
+                if nb_gold >= 0:
+                    for i in Site.list_of_site:
+                        if Site.list_of_site[i].owner == 0 and Site.list_of_site[i].turn_remaining == 0 and Site.list_of_site[i].type_army == 0:
+                            barracks += " " + str(i)
+            print("TRAIN" + barracks)
+        """
             barracks = ""
             nbBarracks = Queen.list_of_queen[0].gold // 80
             for i in Site.list_of_site:
@@ -258,6 +235,9 @@ class GameState:
                     barracks += " " + str(i)
                     nbBarracks -= 1
             print("TRAIN" + barracks)
+        
+        nb_barracks = Site.get_number_buildings_per_type(2)
+        """
     # First line: A valid queen action
     # Second line: A set of training instructions
 
@@ -288,7 +268,7 @@ class GameState:
             self.target = Site.found_nearest_free_site(Queen.list_of_queen[0])
         if self.target.owner == -1:
             print("BUILD " + str(self.target.id) + " TOWER")
-        elif self.target.owner==0 and self.target.portee < 500:
+        elif self.target.owner==0 and self.target.portee < 500:# and (self.distance > 100 or self.distance == -1):
             print("BUILD " + str(self.target.id) + " TOWER")
         else:
             self.target = None
@@ -296,25 +276,14 @@ class GameState:
         return True
 
     def build_mine(self):
-        print("HERE 11",file=sys.stderr)
         if self.target is None:
-            print("HERE 12" + str(self.action),file=sys.stderr)
-            #self.target = Site.findBestMineSite()
-            #if self.target is None:
             self.target = Site.found_nearest_free_site(Queen.list_of_queen[0])
-            print("HERE 122" + str(self.target),file=sys.stderr)
-        #elif self.target.owner == -1 and self.target.max_mine_size !=-1 and self.target.max_mine_size <3:
-        #    self.action = 1
-        #    return False
         if self.target.owner == -1:
             print("BUILD " + str(self.target.id) + " MINE")
-            
         elif self.target.owner == 0:
-            print("HERE 10",file=sys.stderr)
             if self.target.rank < self.target.max_mine_size and self.target.rank < 4:
                 print("BUILD " + str(self.target.id) + " MINE")
             else:
-                print("HERE 13",file=sys.stderr)
                 self.target = None
                 return False
         else:
@@ -338,9 +307,9 @@ for i in range(num_sites):
 
 # game loop
 while True:
-    
     # touched_site: -1 if none
     gold, touched_site = [int(i) for i in input().split()]
+    GameState.instance.id_near = touched_site
     Queen.list_of_queen[0].gold = gold
     for i in range(num_sites):
         # ignore_1: used in future leagues
@@ -360,9 +329,8 @@ while True:
             temp.portee = param_2
         temp.type_army = param_2
         temp.max_mine_size = max_mine_size
-        
         temp.gold = gold
-    Site.calcDistanceSite()
+
     num_units = int(input())
     Unit.list_of_unit = []
     for i in range(num_units):
