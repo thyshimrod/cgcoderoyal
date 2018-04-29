@@ -145,8 +145,9 @@ class GameState:
         #    self.action = 3
         #    return self.build_giant()
         if self.distance < 100 and self.distance != -1 and nb_tower < 4:
-            #self.action = 1
-            #return self.build_tower()
+            self.action = 1
+            return self.build_tower()
+        if self.distance < 100 and self.distance != -1 and nb_tower >= 4:
             return self.flee()
         elif self.target is None:
             if nb_mine>4 and nb_barracks<2:
