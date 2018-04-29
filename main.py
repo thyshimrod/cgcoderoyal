@@ -122,8 +122,10 @@ class GameState:
         self.giant = False
         self.distance = -1
         self.id_near = 0
+        self.unit = None
 
     def take_decision(self):
+        self.unit = None
         nb_barracks = Site.get_number_buildings_per_type(2)
         nb_tower = Site.get_number_buildings_per_type(1)
         nb_tower_ennemy = Site.get_number_buildings_per_type(1,1)
@@ -135,6 +137,7 @@ class GameState:
                 if self.distance == -1 or self.distance > dist:
                     self.distance = dist
                     if self.distance < 80:
+                        self.unit = u
                         break
 
         #print("nb_tower_ennemy" + str(nb_tower_ennemy) + "//" + str(        
@@ -142,8 +145,9 @@ class GameState:
         #    self.action = 3
         #    return self.build_giant()
         if self.distance < 100 and self.distance != -1 and nb_tower < 4:
-            self.action = 1
-            return self.build_tower()
+            #self.action = 1
+            #return self.build_tower()
+            return self.flee()
         elif self.target is None:
             if nb_mine>4 and nb_barracks<2:
                 self.action = 2
@@ -193,6 +197,37 @@ class GameState:
                  #   self.target = None
                  #   return False
         print("WAIT")
+        return True
+    
+    def flee(self):
+        """if self.unit is not None:
+            x = Queen.list_of_queen[0].x - self.unit.x
+            y = Queen.list_of_queen[0].y - self.unit.y
+            if self.id_near != -1 and Site.list_of_site[self.id_near].owner == -1:
+                print("BUILD " + str(self.id_near) + " TOWER")
+            else:
+                print("MOVE " + str(Queen.list_of_queen[0].x+x) + " " + str(Queen.list_of_queen[0].y+y))
+            self.target = None
+            action = -1
+        else:
+            print ("WAIT")
+        """
+        site = Site.found_nearest_site_from_queen(1,Queen.list_of_queen[0])
+        if site is None:
+            if self.unit is not None:
+                x = Queen.list_of_queen[0].x - self.unit.x
+                y = Queen.list_of_queen[0].y - self.unit.y
+                if self.id_near != -1 and Site.list_of_site[self.id_near].owner == -1:
+                    print("BUILD " + str(self.id_near) + " TOWER")
+                else:
+                    print("MOVE " + str(Queen.list_of_queen[0].x+x) + " " + str(Queen.list_of_queen[0].y+y))
+                self.target = None
+                action = -1
+            else:
+                print ("WAIT")
+        else:
+            print("MOVE " + str(site.x) + " " + str(site.y))
+            
         return True
 
     def run(self):
