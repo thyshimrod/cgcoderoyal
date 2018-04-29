@@ -48,11 +48,11 @@ class Site:
         site = None
         for i in Site.list_of_site:
             if Site.list_of_site[i].owner == -1:  # or (Site.list_of_site[i].structure_type == 0 and Site.list_of_site[i].rank<2):
-                if (queen.left and Site.list_of_site[i].x < 1200) or (not queen.left and Site.list_of_site[i].x > 800): 
-                    d = calc_distance(queen, Site.list_of_site[i])
-                    if distance == -1 or distance > d:
-                        distance = d
-                        site = Site.list_of_site[i]
+                #if (queen.left and Site.list_of_site[i].x < 1200) or (not queen.left and Site.list_of_site[i].x > 800): 
+                d = calc_distance(queen, Site.list_of_site[i])
+                if distance == -1 or distance > d:
+                    distance = d
+                    site = Site.list_of_site[i]
         """
         if site is None:
             for i in Site.list_of_site:
@@ -123,6 +123,15 @@ class GameState:
         self.distance = -1
         self.id_near = 0
         self.unit = None
+        
+    def check_under_fire_tower(self):
+        for i in Site.list_of_site:
+            if Site.list_of_site[i].type_building == 1:
+                d = calc_distance(Site.list_of_site[i],Queen.list_of_queen[i])
+                if Site.list_of_site[i].radius <= d:
+                    return True
+        return False
+            
 
     def take_decision(self):
         self.unit = None
@@ -144,6 +153,8 @@ class GameState:
         #if nb_tower_ennemy > 4 and  Site.has_giant_barracks() is None and nb_barracks > 0:
         #    self.action = 3
         #    return self.build_giant()
+        if self.check_under_fire_tower():
+            self.go_back()
         if self.distance < 100 and self.distance != -1 and nb_tower < 4:
             self.action = 1
             return self.build_tower()
@@ -165,6 +176,10 @@ class GameState:
             elif nb_barracks < 2:
                 self.action = 2
                 return self.build_barracks()
+            else:
+                self.action = 1
+                return self.build_tower()
+            """
             elif nb_tower == nb_barracks:
                 self.action = 1
                 return self.build_tower()
@@ -177,10 +192,11 @@ class GameState:
             elif nb_tower < nb_mine:
                 self.action = 1
                 return self.build_tower()
+            
             else:
                 print("WAIT")
                 return true
-
+"""
         else:
             #if self.target.owner == -1:
             if self.action == 0:
@@ -199,6 +215,12 @@ class GameState:
                  #   return False
         print("WAIT")
         return True
+        
+    def go_back(self):
+        if (queen.left):
+            print("MOVE 200 " + str(Queen.list_of_queen[0].x))
+        else:
+            print("MOVE 1600 " + str(Queen.list_of_queen[0].x))
     
     def flee(self):
         """if self.unit is not None:
